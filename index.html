@@ -121,7 +121,6 @@
     }
     .pip {
       position: absolute;
-      aspect-ratio: 1;
       border-radius: 50%;
       background: var(--pip);
       transform: translate(-50%, -50%);
@@ -232,6 +231,7 @@
           pip.style.left = `${(x + 0.5) * cell}%`;
           pip.style.top = `${(y + 0.5) * cell}%`;
           pip.style.width = `${cell * 0.62}%`;
+          pip.style.height = `${cell * 0.62}%`;
           container.appendChild(pip);
         }
         dieEl.appendChild(container);
@@ -282,7 +282,18 @@
 
     // Offline-Unterstützung
     if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("sw.js").catch(() => {});
+      // Sobald eine neue Version aktiv wird, einmal neu laden
+      const hadController = !!navigator.serviceWorker.controller;
+      let reloaded = false;
+      navigator.serviceWorker.addEventListener("controllerchange", () => {
+        if (hadController && !reloaded) {
+          reloaded = true;
+          location.reload();
+        }
+      });
+      navigator.serviceWorker.register("sw.js", { updateViaCache: "none" })
+        .then((reg) => reg.update())
+        .catch(() => {});
     }
   </script>
 </body>
