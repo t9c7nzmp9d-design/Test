@@ -1,5 +1,5 @@
 // Speichert die App-Dateien, damit sie auch offline funktioniert
-const CACHE = "wuerfel-v1";
+const CACHE = "wuerfel-v2";
 const FILES = [
   "./",
   "index.html",

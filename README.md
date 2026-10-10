@@ -1,6 +1,6 @@
 # Würfel – App für iPad
 
-Eine Würfel-App mit wählbarer Seitenzahl (4, 6, 8, 10, 12, 20, 100), umgesetzt als
+Eine Würfel-App mit wählbarer Seitenzahl (4, 6, 8, 10, 12, 20, 24, 100); Werte bis 24 werden als Augen angezeigt, umgesetzt als
 Web-App (PWA), die auf dem iPad wie eine normale App installiert werden kann und
 auch offline funktioniert.
 

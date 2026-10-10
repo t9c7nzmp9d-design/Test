@@ -104,10 +104,6 @@
       border: calc(var(--die-size) * 0.025) solid var(--die-border);
       border-radius: calc(var(--die-size) * 0.15);
       box-shadow: 0 12px 30px rgba(0, 0, 0, 0.25);
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      grid-template-rows: repeat(3, 1fr);
-      padding: calc(var(--die-size) * 0.11);
       position: relative;
       cursor: pointer;
     }
@@ -119,13 +115,16 @@
       75%  { transform: rotate(270deg) scale(0.9); }
       100% { transform: rotate(360deg) scale(1); }
     }
+    .pips {
+      position: absolute;
+      inset: 7%;
+    }
     .pip {
-      width: calc(var(--die-size) * 0.17);
-      height: calc(var(--die-size) * 0.17);
+      position: absolute;
+      aspect-ratio: 1;
       border-radius: 50%;
       background: var(--pip);
-      align-self: center;
-      justify-self: center;
+      transform: translate(-50%, -50%);
     }
     .number {
       position: absolute;
@@ -152,6 +151,7 @@
       <option value="10">10</option>
       <option value="12">12</option>
       <option value="20">20</option>
+      <option value="24">24</option>
       <option value="100">100</option>
     </select>
     <button id="rollBtn">Würfeln</button>
@@ -162,15 +162,55 @@
   <div class="hint">Tipp: Auch ein Tippen auf den Würfel würfelt.</div>
 
   <script>
-    // Positionen der Augen im 3x3-Raster (Zeile, Spalte) für die Werte 1–6
-    const PIP_LAYOUTS = {
-      1: [[2, 2]],
-      2: [[1, 1], [3, 3]],
-      3: [[1, 1], [2, 2], [3, 3]],
-      4: [[1, 1], [1, 3], [3, 1], [3, 3]],
-      5: [[1, 1], [1, 3], [2, 2], [3, 1], [3, 3]],
-      6: [[1, 1], [1, 3], [2, 1], [2, 3], [3, 1], [3, 3]]
+    // Klassische Augen 1–9 im 3x3-Raster als [Spalte, Zeile] (0–2)
+    const CLASSIC_LAYOUTS = {
+      1: [[1, 1]],
+      2: [[0, 0], [2, 2]],
+      3: [[0, 0], [1, 1], [2, 2]],
+      4: [[0, 0], [2, 0], [0, 2], [2, 2]],
+      5: [[0, 0], [2, 0], [1, 1], [0, 2], [2, 2]],
+      6: [[0, 0], [2, 0], [0, 1], [2, 1], [0, 2], [2, 2]],
+      7: [[0, 0], [2, 0], [0, 1], [1, 1], [2, 1], [0, 2], [2, 2]],
+      8: [[0, 0], [1, 0], [2, 0], [0, 1], [2, 1], [0, 2], [1, 2], [2, 2]],
+      9: [[0, 0], [1, 0], [2, 0], [0, 1], [1, 1], [2, 1], [0, 2], [1, 2], [2, 2]]
     };
+
+    // Ab 10: Anzahl der Augen pro Zeile (symmetrisch, jede Zeile zentriert)
+    const ROW_LAYOUTS = {
+      10: [3, 4, 3],
+      11: [4, 3, 4],
+      12: [4, 4, 4],
+      13: [3, 2, 3, 2, 3],
+      14: [4, 3, 3, 4],
+      15: [2, 4, 3, 4, 2],
+      16: [4, 4, 4, 4],
+      17: [4, 3, 3, 3, 4],
+      18: [3, 4, 4, 4, 3],
+      19: [3, 4, 5, 4, 3],
+      20: [4, 4, 4, 4, 4],
+      21: [4, 4, 5, 4, 4],
+      22: [4, 5, 4, 5, 4],
+      23: [5, 4, 5, 4, 5],
+      24: [5, 5, 4, 5, 5]
+    };
+    const MAX_PIPS = 24;
+
+    // Liefert die Augenpositionen und die Rastergröße für einen Wert
+    function pipLayout(value) {
+      if (CLASSIC_LAYOUTS[value]) {
+        return { size: 3, points: CLASSIC_LAYOUTS[value] };
+      }
+      const rows = ROW_LAYOUTS[value];
+      const size = Math.max(rows.length, ...rows);
+      const points = [];
+      rows.forEach((count, r) => {
+        const y = r + (size - rows.length) / 2;
+        for (let i = 0; i < count; i++) {
+          points.push([i + (size - count) / 2, y]);
+        }
+      });
+      return { size, points };
+    }
 
     const dieEl = document.getElementById("die");
     const sidesEl = document.getElementById("sides");
@@ -180,15 +220,21 @@
 
     function showValue(value) {
       dieEl.innerHTML = "";
-      if (value <= 6) {
-        // Klassische Augen darstellen
-        for (const [row, col] of PIP_LAYOUTS[value]) {
+      if (value <= MAX_PIPS) {
+        // Augen darstellen
+        const { size, points } = pipLayout(value);
+        const cell = 100 / size;
+        const container = document.createElement("div");
+        container.className = "pips";
+        for (const [x, y] of points) {
           const pip = document.createElement("div");
           pip.className = "pip";
-          pip.style.gridRow = row;
-          pip.style.gridColumn = col;
-          dieEl.appendChild(pip);
+          pip.style.left = `${(x + 0.5) * cell}%`;
+          pip.style.top = `${(y + 0.5) * cell}%`;
+          pip.style.width = `${cell * 0.62}%`;
+          container.appendChild(pip);
         }
+        dieEl.appendChild(container);
       } else {
         // Größere Werte als Zahl darstellen
         const num = document.createElement("div");
